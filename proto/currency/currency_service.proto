@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package = "./pb";
+
+package currency;
+
+service CurrencyService {
+    rpc GetCurrentRate (GetCurrentRateRequest) returns (GetCurrentRateResponse);
+    rpc GetHistoryRate (GetHistoryRateRequest) returns (GetHistoryRateResponse);
+}
+
+message GetCurrentRateRequest {
+
+}
+
+message GetCurrentRateResponse {
+    string date = 1;
+    double rate = 2;
+}
+
+message GetHistoryRateRequest {
+
+}
+
+message GetHistoryRateResponse {
+    map<string, double> history = 1;
+}
