@@ -108,18 +108,8 @@ func main() {
 		}
 	}()
 
-	http.HandleFunc("/curr", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Date: ", time.Now().Format("02.01.2006"))
-		fmt.Fprintln(w, "Currency of RUB: ", Rate_USD)
-		DATA_HISTORY[rate.Date.Format("02.01.2006")] = rate.Val["RUB"]
-	})
-
-	http.HandleFunc("/history", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println(DATA_HISTORY)
-		for key, val := range DATA_HISTORY {
-			fmt.Fprintf(w, "Date - %s\nCurrency - %v\n\n", key, val)
-		}
-	})
+	grpcServer := grpc.NewServer()
+	pb.RegisterCurrencyServiceServer(grpcServer, &server{})
 
 	lis, err := net.Listen("tcp", "localhost:8082")
 	if err != nil {
@@ -127,8 +117,6 @@ func main() {
 		return
 	}
 
-	grpcServer := grpc.NewServer()
-	pb.RegisterCurrencyServiceServer(grpcServer, &server{})
 	fmt.Println("gRPC server is running on :8082")
 	if err := grpcServer.Serve(lis); err != nil {
 		fmt.Printf("failed to serve: %v\n", err)
