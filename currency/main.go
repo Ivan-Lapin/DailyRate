@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"time"
+
+	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -14,6 +21,10 @@ var (
 	DATA_HISTORY map[string]float64
 	Rate_USD     float64
 )
+
+type server struct {
+	pb.UnimplementedCurrencyServiceServer
+}
 
 type Currency struct {
 	Date time.Time
@@ -48,6 +59,28 @@ func FoundUSDT() (Currency, error) {
 	}
 
 	return *rate, nil
+}
+
+func (s *server) GetCurrentRate(ctx context.Context, req *pb.GetCurrentRateRequest) (*pb.GetCurrentRateResponse, error) {
+	rate, err := FoundUSDT()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to fetch rate: %v", err)
+	}
+
+	Rate_USD = rate.Val["RUB"]
+	DATA_HISTORY[rate.Date.Format("02.01.2006")] = rate.Val["RUB"]
+
+	return &pb.GetCurrentRateResponse{
+		Date: time.Now().Format("02.01.2006"),
+		Rate: Rate_USD,
+	}, nil
+
+}
+
+func (s *server) GetHistoryRate(ctx context.Context, req *pb.GetHistoryRateRequest) (*pb.GetHistoryRateResponse, error) {
+	return &pb.GetHistoryRateResponse{
+		History: DATA_HISTORY,
+	}, nil
 }
 
 func main() {
@@ -88,6 +121,17 @@ func main() {
 		}
 	})
 
-	http.ListenAndServe(":8082", nil)
+	lis, err := net.Listen("tcp", "localhost:8082")
+	if err != nil {
+		fmt.Printf("failed to listen: %v\n", err)
+		return
+	}
+
+	grpcServer := grpc.NewServer()
+	pb.RegisterCurrencyServiceServer(grpcServer, &server{})
+	fmt.Println("gRPC server is running on :8082")
+	if err := grpcServer.Serve(lis); err != nil {
+		fmt.Printf("failed to serve: %v\n", err)
+	}
 
 }
