@@ -24,6 +24,17 @@ type currencyService struct {
 	repo repository.Repository
 }
 
+type App struct {
+	Config *config.ConfigParam
+	Logger *zap.Logger
+	CS     CurrencyService
+}
+
+type Currency struct {
+	Date time.Time
+	Val  map[string]float64 `json:"conversion_rates"`
+}
+
 func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error) {
 	var resp *http.Response
 	var err error
@@ -82,17 +93,6 @@ func (cs currencyService) GetRateForDate(date string) (float64, bool) {
 
 func NewCurrencyService(repo repository.Repository) CurrencyService {
 	return currencyService{repo: repo}
-}
-
-type App struct {
-	Config *config.ConfigParam
-	Logger *zap.Logger
-	CS     CurrencyService
-}
-
-type Currency struct {
-	Date time.Time
-	Val  map[string]float64 `json:"conversion_rates"`
 }
 
 func NewApp(config *config.ConfigParam, logger *zap.Logger, cs CurrencyService) *App {

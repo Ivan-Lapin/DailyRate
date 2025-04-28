@@ -10,12 +10,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Ivan-Lapin/DailyRate/currency/cmd/cron"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/config"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/handler"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/repository"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/service"
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
-	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -50,20 +50,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	c := cron.New()
-	defer c.Stop()
+	cronScheduler := cron.NewScheduler(ctx, logger, config, currencyService)
+	defer cronScheduler.Stop()
 
-	if _, err = c.AddFunc("0 0 * * *", func() {
-		_, err := currencyService.Fetch(ctx, config, logger)
-		if err != nil {
-			err = fmt.Errorf("failed to get start currency rate: %w", err)
-			logger.Error("get current currency rate", zap.Error(err))
-		}
-	}); err != nil {
+	if err = cronScheduler.AddCurrencyFetchJob(); err != nil {
 		logger.Fatal("Failed to add cron job", zap.Error(err))
 	}
 
-	c.Start()
+	cronScheduler.Start()
 
 	_, err = currencyService.Fetch(ctx, app.Config, app.Logger)
 	if err != nil {
@@ -116,10 +110,6 @@ func main() {
 
 	<-sigCtx.Done()
 	logger.Info("shutting down...")
-
-	cancel()
-
-	c.Stop()
 
 	grpcServer.GracefulStop()
 
