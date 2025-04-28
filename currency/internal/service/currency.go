@@ -9,17 +9,22 @@ import (
 	"time"
 
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/config"
+	"github.com/Ivan-Lapin/DailyRate/currency/internal/repository"
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 )
 
-type Currency struct {
-	Date time.Time
-	Val  map[string]float64 `json:"conversion_rates"`
+type CurrencyService interface {
+	Fetch(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error)
+	GetRateForDate(date string) (float64, bool)
+	GetAllHistory() map[string]float64
 }
 
-func FoundUSDT(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error) {
+type currencyService struct {
+	repo repository.Repository
+}
 
+func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error) {
 	var resp *http.Response
 	var err error
 
@@ -62,5 +67,38 @@ func FoundUSDT(ctx context.Context, config *config.ConfigParam, logger *zap.Logg
 		return Currency{}, err
 	}
 
+	cs.repo.Save(rate.Date.Format("02.10.2024"), rate.Val["RUB"])
+
 	return *rate, nil
+}
+
+func (cs currencyService) GetAllHistory() map[string]float64 {
+	return cs.repo.All()
+}
+
+func (cs currencyService) GetRateForDate(date string) (float64, bool) {
+	return cs.repo.Get(date)
+}
+
+func NewCurrencyService(repo repository.Repository) CurrencyService {
+	return currencyService{repo: repo}
+}
+
+type App struct {
+	Config *config.ConfigParam
+	Logger *zap.Logger
+	CS     CurrencyService
+}
+
+type Currency struct {
+	Date time.Time
+	Val  map[string]float64 `json:"conversion_rates"`
+}
+
+func NewApp(config *config.ConfigParam, logger *zap.Logger, cs CurrencyService) *App {
+	return &App{
+		Config: config,
+		Logger: logger,
+		CS:     cs,
+	}
 }

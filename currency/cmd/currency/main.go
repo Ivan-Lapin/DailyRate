@@ -12,6 +12,7 @@ import (
 
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/config"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/handler"
+	"github.com/Ivan-Lapin/DailyRate/currency/internal/repository"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/service"
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
 	"github.com/robfig/cron/v3"
@@ -37,12 +38,14 @@ func main() {
 
 	config, err := config.LoadConfig(configPath, logger)
 	if err != nil {
-		log.Fatalf("failed to load config %w", err)
+		logger.Fatal("failed to load config %w", zap.Error(err))
 	}
 
-	store := handler.NewStore()
+	repo := repository.NewInMemory()
 
-	app := handler.NewApp(config, store, logger)
+	currencyService := service.NewCurrencyService(repo)
+
+	app := service.NewApp(config, logger, currencyService)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -51,12 +54,10 @@ func main() {
 	defer c.Stop()
 
 	if _, err = c.AddFunc("0 0 * * *", func() {
-		rate, err := service.FoundUSDT(ctx, config, logger)
+		_, err := currencyService.Fetch(ctx, config, logger)
 		if err != nil {
 			err = fmt.Errorf("failed to get start currency rate: %w", err)
 			logger.Error("get current currency rate", zap.Error(err))
-		} else {
-			app.Store.SetCurrentRateRUB(rate, logger)
 		}
 	}); err != nil {
 		logger.Fatal("Failed to add cron job", zap.Error(err))
@@ -64,12 +65,10 @@ func main() {
 
 	c.Start()
 
-	rate, err := service.FoundUSDT(ctx, app.Config, app.Logger)
+	_, err = currencyService.Fetch(ctx, app.Config, app.Logger)
 	if err != nil {
 		err = fmt.Errorf("failed to get start currency rate: %w", err)
 		logger.Error("get start currency rate", zap.Error(err))
-	} else {
-		app.Store.SetCurrentRateRUB(rate, logger)
 	}
 
 	grpcServer := grpc.NewServer()
