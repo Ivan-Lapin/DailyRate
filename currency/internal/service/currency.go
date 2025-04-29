@@ -21,7 +21,8 @@ type CurrencyService interface {
 }
 
 type currencyService struct {
-	repo repository.Repository
+	repo   repository.Repository
+	client *http.Client
 }
 
 type App struct {
@@ -31,20 +32,14 @@ type App struct {
 }
 
 type Currency struct {
-	Date time.Time
+	Date string
 	Val  map[string]float64 `json:"conversion_rates"`
 }
 
-func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error) {
-	var resp *http.Response
-	var err error
-
-	b := backoff.NewExponentialBackOff()
-	b.MaxElapsedTime = 1 * time.Minute
-
-	err = backoff.Retry(func() error {
-
-		resp, err = http.Get(config.CurrencyAPI)
+func (cs currencyService) NewRetryGet(b *backoff.ExponentialBackOff, logger *zap.Logger, config *config.ConfigParam, resp *http.Response) (*http.Response, error) {
+	err_retry := backoff.Retry(func() error {
+		var err error
+		resp, err = cs.client.Get(config.CurrencyAPI)
 		if err != nil {
 			err = fmt.Errorf("failed to fetch currency data: %w", err)
 			logger.Error("found usdt", zap.Error(err))
@@ -54,8 +49,19 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 		return nil
 	}, b)
 
+	return resp, err_retry
+}
+
+func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error) {
+	var resp *http.Response
+	var err error
+
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = 1 * time.Minute
+
+	resp, err = cs.NewRetryGet(b, logger, config, resp)
+
 	if err != nil {
-		err = fmt.Errorf("failed to fetch currency data: %w", err)
 		logger.Error("Failed to fetch currency data", zap.Error(err))
 		return Currency{}, err
 	}
@@ -70,7 +76,7 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 	}
 
 	rate := &Currency{}
-	rate.Date = time.Now()
+	rate.Date = time.Now().Format("02.10.2024")
 	err = json.Unmarshal(body, rate)
 	if err != nil {
 		err = fmt.Errorf("failed to Unmarshal JSON data: %w", err)
@@ -78,7 +84,11 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 		return Currency{}, err
 	}
 
-	cs.repo.Save(rate.Date.Format("02.10.2024"), rate.Val["RUB"])
+	if rate.Date == "" {
+		cs.repo.Save(time.Now().Format("02.10.2024"), rate.Val["RUB"])
+	} else {
+		cs.repo.Save(rate.Date, rate.Val["RUB"])
+	}
 
 	return *rate, nil
 }
@@ -92,7 +102,9 @@ func (cs currencyService) GetRateForDate(date string) (float64, bool) {
 }
 
 func NewCurrencyService(repo repository.Repository) CurrencyService {
-	return currencyService{repo: repo}
+	return currencyService{repo: repo, client: &http.Client{
+		Timeout: 10 * time.Second,
+	}}
 }
 
 func NewApp(config *config.ConfigParam, logger *zap.Logger, cs CurrencyService) *App {
