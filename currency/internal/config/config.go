@@ -20,6 +20,8 @@ func LoadConfig(configPath string, logger *zap.Logger) (*ConfigParam, error) {
 		CurrencyAPI: viper.GetString("currency_api_url"),
 		GRPCPort:    viper.GetString("grpc_port"),
 		HTTPPort:    viper.GetString("http_port"),
+		ConnDB:      viper.GetString("connectDB"),
+		NameDB:      viper.GetString("nameDB"),
 	}
 
 	logger.Info("Configuration loaded", zap.Any("config", config))
@@ -31,4 +33,6 @@ type ConfigParam struct {
 	CurrencyAPI string
 	GRPCPort    string
 	HTTPPort    string
+	ConnDB      string
+	NameDB      string
 }

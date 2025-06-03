@@ -13,8 +13,8 @@ import (
 	"github.com/Ivan-Lapin/DailyRate/currency/cmd/cron"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/config"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/handler"
-	"github.com/Ivan-Lapin/DailyRate/currency/internal/repository"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/service"
+	"github.com/Ivan-Lapin/DailyRate/currency/internal/storage"
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -41,9 +41,16 @@ func main() {
 		logger.Fatal("failed to load config %w", zap.Error(err))
 	}
 
-	repo := repository.NewInMemory()
+	db_postgreSQL, err := storage.New(config.ConnDB)
+	if err != nil {
+		log.Fatal(err) //todo
+	}
 
-	currencyService := service.NewCurrencyService(repo)
+	_ = db_postgreSQL
+
+	// repo := repository.NewInMemory()
+
+	currencyService := service.NewCurrencyService(*db_postgreSQL)
 
 	app := service.NewApp(config, logger, currencyService)
 

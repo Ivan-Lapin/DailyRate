@@ -1,6 +1,8 @@
 package repository
 
-import "sync"
+import (
+	"sync"
+)
 
 type Repository interface {
 	Save(date string, rate float64)
@@ -26,6 +28,8 @@ func (im *InMemory) Save(date string, rate float64) {
 }
 
 func (im *InMemory) Get(date string) (float64, bool) {
+	im.Lock()
+	defer im.Unlock()
 	rate, exist := im.Rates[date]
 	return rate, exist
 }

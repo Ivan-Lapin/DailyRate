@@ -22,6 +22,12 @@ message GetHistoryRateRequest {
 
 }
 
+
 message GetHistoryRateResponse {
-    map<string, double> history = 1;
+    repeated HistoryRateItem history = 1;
+}
+
+message HistoryRateItem {
+    string date = 1;
+    double rate = 2;
 }

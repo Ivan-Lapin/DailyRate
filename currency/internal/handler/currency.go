@@ -29,7 +29,17 @@ func (s *Server) GetCurrentRate(ctx context.Context, req *pb.GetCurrentRateReque
 }
 
 func (s *Server) GetHistoryRate(ctx context.Context, req *pb.GetHistoryRateRequest) (*pb.GetHistoryRateResponse, error) {
+	historyRate, err := s.App.CS.GetAllHistory(s.App.Logger)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get history: %v", err)
+	}
+
+	historyMap := make(map[string]float64)
+	for _, item := range historyRate {
+		historyMap[item.Date] = float64(item.Value)
+	}
+
 	return &pb.GetHistoryRateResponse{
-		History: s.App.CS.GetAllHistory(),
+		History: historyMap,
 	}, nil
 }

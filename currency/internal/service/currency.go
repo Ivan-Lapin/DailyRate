@@ -9,20 +9,21 @@ import (
 	"time"
 
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/config"
-	"github.com/Ivan-Lapin/DailyRate/currency/internal/repository"
+	"github.com/Ivan-Lapin/DailyRate/currency/internal/storage"
 	"github.com/cenkalti/backoff/v4"
 	"go.uber.org/zap"
 )
 
 type CurrencyService interface {
 	Fetch(ctx context.Context, config *config.ConfigParam, logger *zap.Logger) (Currency, error)
-	GetRateForDate(date string) (float64, bool)
-	GetAllHistory() map[string]float64
+	GetRateForDate(date string, logger *zap.Logger) (storage.Rate, bool, error)
+	GetAllHistory(logger *zap.Logger) (storage.HistoryRate, error)
 }
 
 type currencyService struct {
-	repo   repository.Repository
-	client *http.Client
+	// repo    repository.Repository
+	storage *storage.Storage
+	client  *http.Client
 }
 
 type App struct {
@@ -85,24 +86,27 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 	}
 
 	if rate.Date == "" {
-		cs.repo.Save(time.Now().Format("02.10.2024"), rate.Val["RUB"])
+		// cs.repo.Save(time.Now().Format("02.10.2024"), rate.Val["RUB"])
+		cs.storage.SaveRate(time.Now().Format("02.10.2024"), rate.Val["RUB"], logger)
 	} else {
-		cs.repo.Save(rate.Date, rate.Val["RUB"])
+		// cs.repo.Save(rate.Date, rate.Val["RUB"])
+		cs.storage.SaveRate(rate.Date, rate.Val["RUB"], logger)
 	}
 
 	return *rate, nil
 }
 
-func (cs currencyService) GetAllHistory() map[string]float64 {
-	return cs.repo.All()
+func (cs currencyService) GetAllHistory(logger *zap.Logger) (storage.HistoryRate, error) {
+	return cs.storage.GetHistory(logger)
+	// return cs.repo.All(), historyRate
 }
 
-func (cs currencyService) GetRateForDate(date string) (float64, bool) {
-	return cs.repo.Get(date)
+func (cs currencyService) GetRateForDate(date string, logger *zap.Logger) (storage.Rate, bool, error) {
+	return cs.storage.GetRate(date, logger)
 }
 
-func NewCurrencyService(repo repository.Repository) CurrencyService {
-	return currencyService{repo: repo, client: &http.Client{
+func NewCurrencyService(storage storage.Storage) CurrencyService {
+	return currencyService{storage: &storage, client: &http.Client{
 		Timeout: 10 * time.Second,
 	}}
 }
