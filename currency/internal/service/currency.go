@@ -33,7 +33,7 @@ type App struct {
 }
 
 type Currency struct {
-	Date string
+	Date string             `json:"time_last_update_utc"`
 	Val  map[string]float64 `json:"conversion_rates"`
 }
 
@@ -61,7 +61,6 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 	b.MaxElapsedTime = 1 * time.Minute
 
 	resp, err = cs.NewRetryGet(b, logger, config, resp)
-
 	if err != nil {
 		logger.Error("Failed to fetch currency data", zap.Error(err))
 		return Currency{}, err
@@ -71,29 +70,53 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		err = fmt.Errorf("failed to read response from API: %w", err)
 		logger.Error("read response from API", zap.Error(err))
-		return Currency{}, err
+		return Currency{}, fmt.Errorf("failed to read response from API: %w", err)
 	}
 
-	rate := &Currency{}
-	rate.Date = time.Now().Format("02.10.2024")
-	err = json.Unmarshal(body, rate)
+	// Декодируем ответ API
+	var apiResponse struct {
+		Result             string             `json:"result"`
+		TimeLastUpdateUTC  string             `json:"time_last_update_utc"`
+		TimeLastUpdateUnix int64              `json:"time_last_update_unix"`
+		BaseCode           string             `json:"base_code"`
+		ConversionRates    map[string]float64 `json:"conversion_rates"`
+	}
+
+	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
 		err = fmt.Errorf("failed to Unmarshal JSON data: %w", err)
 		logger.Error("Unmarshal JSON", zap.Error(err))
 		return Currency{}, err
 	}
 
-	if rate.Date == "" {
-		// cs.repo.Save(time.Now().Format("02.10.2024"), rate.Val["RUB"])
-		cs.storage.SaveRate(time.Now().Format("02.10.2024"), rate.Val["RUB"], logger)
-	} else {
-		// cs.repo.Save(rate.Date, rate.Val["RUB"])
-		cs.storage.SaveRate(rate.Date, rate.Val["RUB"], logger)
+	// Парсим дату из API
+	apiDate, err := time.Parse(time.RFC1123, apiResponse.TimeLastUpdateUTC)
+	if err != nil {
+		logger.Error("failed to parse API date", zap.String("api_date", apiResponse.TimeLastUpdateUTC), zap.Error(err))
+		return Currency{}, fmt.Errorf("failed to parse API date: %w", err)
+	}
+	formattedDate := apiDate.Format("02.01.2006")
+
+	// Проверяем наличие курса RUB
+	rateVal, ok := apiResponse.ConversionRates["RUB"]
+	if !ok {
+		logger.Error("RUB rate not found in API response")
+		return Currency{}, fmt.Errorf("RUB rate not found in API response")
 	}
 
-	return *rate, nil
+	currency := Currency{
+		Date: formattedDate,
+		Val:  apiResponse.ConversionRates,
+	}
+
+	// cs.repo.Save(rate.Date, rate.Val["RUB"])
+	if err := cs.storage.SaveRate(formattedDate, rateVal, logger); err != nil {
+		logger.Error("failed to save rate", zap.String("date", formattedDate), zap.Float64("rate", rateVal), zap.Error(err))
+		return currency, fmt.Errorf("failed to save rate: %w", err)
+	}
+
+	return currency, nil
 }
 
 func (cs currencyService) GetAllHistory(logger *zap.Logger) (storage.HistoryRate, error) {

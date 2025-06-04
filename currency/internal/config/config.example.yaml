@@ -1,5 +1,5 @@
 currency_api_url: 	https://v6.exchangerate-api.com/v6/1d40c79e54dd9bde719c2bb0/latest/USD
 grpc_port: ":8082"
 http_port: ":8083"
-connectDB: "host=127.0.0.1 port=8080 user=postgres password=qwerty1 dbname=postgres sslmode=disable"
+connectDB: "host=127.0.0.1 port=8080 user=postgres password=qwerty1 dbname=pinchik sslmode=disable"
 nameDB: "pinchik_psql"

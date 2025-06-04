@@ -41,7 +41,7 @@ func main() {
 		logger.Fatal("failed to load config %w", zap.Error(err))
 	}
 
-	db_postgreSQL, err := storage.New(config.ConnDB)
+	db_postgreSQL, err := storage.New(config.ConnDB, logger)
 	if err != nil {
 		log.Fatal(err) //todo
 	}

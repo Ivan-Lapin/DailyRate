@@ -3,7 +3,6 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"log"
 
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -22,7 +21,7 @@ type HistoryRateItem struct {
 
 type HistoryRate []HistoryRateItem
 
-func New(storagePath string) (*Storage, error) {
+func New(storagePath string, logger *zap.Logger) (*Storage, error) {
 	const op = "storage.postgres.New"
 
 	db, err := sql.Open("postgres", storagePath)
@@ -30,9 +29,10 @@ func New(storagePath string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		log.Fatal("DB connection failed:", err)
+	if err := db.Ping(); err != nil {
+		logger.Error("failed to ping database", zap.Error(err))
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	stmt, err := db.Prepare(`
@@ -61,7 +61,6 @@ func (st *Storage) SaveRate(date string, rate float64, logger *zap.Logger) error
 	if err != nil {
 		logger.Error("failed to insert data", zap.Error(err))
 	}
-	fmt.Println("Inserting:", date, rate)
 	return err
 }
 
