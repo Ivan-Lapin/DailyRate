@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	CurrencyService_GetCurrentRate_FullMethodName = "/currency.CurrencyService/GetCurrentRate"
+	CurrencyService_GetRateDate_FullMethodName    = "/currency.CurrencyService/GetRateDate"
 	CurrencyService_GetHistoryRate_FullMethodName = "/currency.CurrencyService/GetHistoryRate"
 )
 
@@ -28,6 +29,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CurrencyServiceClient interface {
 	GetCurrentRate(ctx context.Context, in *GetCurrentRateRequest, opts ...grpc.CallOption) (*GetCurrentRateResponse, error)
+	GetRateDate(ctx context.Context, in *GetRateDateRequest, opts ...grpc.CallOption) (*GetRateDateResponse, error)
 	GetHistoryRate(ctx context.Context, in *GetHistoryRateRequest, opts ...grpc.CallOption) (*GetHistoryRateResponse, error)
 }
 
@@ -49,6 +51,16 @@ func (c *currencyServiceClient) GetCurrentRate(ctx context.Context, in *GetCurre
 	return out, nil
 }
 
+func (c *currencyServiceClient) GetRateDate(ctx context.Context, in *GetRateDateRequest, opts ...grpc.CallOption) (*GetRateDateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRateDateResponse)
+	err := c.cc.Invoke(ctx, CurrencyService_GetRateDate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *currencyServiceClient) GetHistoryRate(ctx context.Context, in *GetHistoryRateRequest, opts ...grpc.CallOption) (*GetHistoryRateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetHistoryRateResponse)
@@ -64,6 +76,7 @@ func (c *currencyServiceClient) GetHistoryRate(ctx context.Context, in *GetHisto
 // for forward compatibility.
 type CurrencyServiceServer interface {
 	GetCurrentRate(context.Context, *GetCurrentRateRequest) (*GetCurrentRateResponse, error)
+	GetRateDate(context.Context, *GetRateDateRequest) (*GetRateDateResponse, error)
 	GetHistoryRate(context.Context, *GetHistoryRateRequest) (*GetHistoryRateResponse, error)
 	mustEmbedUnimplementedCurrencyServiceServer()
 }
@@ -77,6 +90,9 @@ type UnimplementedCurrencyServiceServer struct{}
 
 func (UnimplementedCurrencyServiceServer) GetCurrentRate(context.Context, *GetCurrentRateRequest) (*GetCurrentRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentRate not implemented")
+}
+func (UnimplementedCurrencyServiceServer) GetRateDate(context.Context, *GetRateDateRequest) (*GetRateDateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRateDate not implemented")
 }
 func (UnimplementedCurrencyServiceServer) GetHistoryRate(context.Context, *GetHistoryRateRequest) (*GetHistoryRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHistoryRate not implemented")
@@ -120,6 +136,24 @@ func _CurrencyService_GetCurrentRate_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CurrencyService_GetRateDate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRateDateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CurrencyServiceServer).GetRateDate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CurrencyService_GetRateDate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CurrencyServiceServer).GetRateDate(ctx, req.(*GetRateDateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _CurrencyService_GetHistoryRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetHistoryRateRequest)
 	if err := dec(in); err != nil {
@@ -148,6 +182,10 @@ var CurrencyService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCurrentRate",
 			Handler:    _CurrencyService_GetCurrentRate_Handler,
+		},
+		{
+			MethodName: "GetRateDate",
+			Handler:    _CurrencyService_GetRateDate_Handler,
 		},
 		{
 			MethodName: "GetHistoryRate",

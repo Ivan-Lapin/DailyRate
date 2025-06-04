@@ -6,6 +6,7 @@ package currency;
 
 service CurrencyService {
     rpc GetCurrentRate (GetCurrentRateRequest) returns (GetCurrentRateResponse);
+    rpc GetRateDate (GetRateDateRequest) returns (GetRateDateResponse);
     rpc GetHistoryRate (GetHistoryRateRequest) returns (GetHistoryRateResponse);
 }
 
@@ -16,6 +17,14 @@ message GetCurrentRateRequest {
 message GetCurrentRateResponse {
     string date = 1;
     double rate = 2;
+}
+
+message GetRateDateRequest {
+    string date = 1;
+}
+
+message GetRateDateResponse {
+    double rate = 1;
 }
 
 message GetHistoryRateRequest {

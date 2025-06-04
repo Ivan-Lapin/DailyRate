@@ -65,7 +65,7 @@ func (st *Storage) SaveRate(date string, rate float64, logger *zap.Logger) error
 }
 
 func (st *Storage) GetRate(date string, logger *zap.Logger) (Rate, bool, error) {
-	query := `SELECT value FROM dailyrate WHERE date == $1`
+	query := `SELECT value FROM dailyrate WHERE date = $1 LIMIT 1`
 	rows, err := st.db.Query(query, date)
 	if err != nil {
 		logger.Error("failed to get rate from date", zap.Error(err))

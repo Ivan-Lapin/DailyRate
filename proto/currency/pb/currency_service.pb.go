@@ -109,6 +109,94 @@ func (x *GetCurrentRateResponse) GetRate() float64 {
 	return 0
 }
 
+type GetRateDateRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRateDateRequest) Reset() {
+	*x = GetRateDateRequest{}
+	mi := &file_currency_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRateDateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRateDateRequest) ProtoMessage() {}
+
+func (x *GetRateDateRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_currency_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRateDateRequest.ProtoReflect.Descriptor instead.
+func (*GetRateDateRequest) Descriptor() ([]byte, []int) {
+	return file_currency_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetRateDateRequest) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+type GetRateDateResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Rate          float64                `protobuf:"fixed64,1,opt,name=rate,proto3" json:"rate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetRateDateResponse) Reset() {
+	*x = GetRateDateResponse{}
+	mi := &file_currency_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetRateDateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetRateDateResponse) ProtoMessage() {}
+
+func (x *GetRateDateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_currency_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetRateDateResponse.ProtoReflect.Descriptor instead.
+func (*GetRateDateResponse) Descriptor() ([]byte, []int) {
+	return file_currency_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *GetRateDateResponse) GetRate() float64 {
+	if x != nil {
+		return x.Rate
+	}
+	return 0
+}
+
 type GetHistoryRateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -117,7 +205,7 @@ type GetHistoryRateRequest struct {
 
 func (x *GetHistoryRateRequest) Reset() {
 	*x = GetHistoryRateRequest{}
-	mi := &file_currency_service_proto_msgTypes[2]
+	mi := &file_currency_service_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -129,7 +217,7 @@ func (x *GetHistoryRateRequest) String() string {
 func (*GetHistoryRateRequest) ProtoMessage() {}
 
 func (x *GetHistoryRateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_currency_service_proto_msgTypes[2]
+	mi := &file_currency_service_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -142,19 +230,19 @@ func (x *GetHistoryRateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHistoryRateRequest.ProtoReflect.Descriptor instead.
 func (*GetHistoryRateRequest) Descriptor() ([]byte, []int) {
-	return file_currency_service_proto_rawDescGZIP(), []int{2}
+	return file_currency_service_proto_rawDescGZIP(), []int{4}
 }
 
 type GetHistoryRateResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	History       map[string]float64     `protobuf:"bytes,1,rep,name=history,proto3" json:"history,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"fixed64,2,opt,name=value"`
+	History       []*HistoryRateItem     `protobuf:"bytes,1,rep,name=history,proto3" json:"history,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetHistoryRateResponse) Reset() {
 	*x = GetHistoryRateResponse{}
-	mi := &file_currency_service_proto_msgTypes[3]
+	mi := &file_currency_service_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -166,7 +254,7 @@ func (x *GetHistoryRateResponse) String() string {
 func (*GetHistoryRateResponse) ProtoMessage() {}
 
 func (x *GetHistoryRateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_currency_service_proto_msgTypes[3]
+	mi := &file_currency_service_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -179,14 +267,66 @@ func (x *GetHistoryRateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHistoryRateResponse.ProtoReflect.Descriptor instead.
 func (*GetHistoryRateResponse) Descriptor() ([]byte, []int) {
-	return file_currency_service_proto_rawDescGZIP(), []int{3}
+	return file_currency_service_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *GetHistoryRateResponse) GetHistory() map[string]float64 {
+func (x *GetHistoryRateResponse) GetHistory() []*HistoryRateItem {
 	if x != nil {
 		return x.History
 	}
 	return nil
+}
+
+type HistoryRateItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Date          string                 `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	Rate          float64                `protobuf:"fixed64,2,opt,name=rate,proto3" json:"rate,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HistoryRateItem) Reset() {
+	*x = HistoryRateItem{}
+	mi := &file_currency_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HistoryRateItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HistoryRateItem) ProtoMessage() {}
+
+func (x *HistoryRateItem) ProtoReflect() protoreflect.Message {
+	mi := &file_currency_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HistoryRateItem.ProtoReflect.Descriptor instead.
+func (*HistoryRateItem) Descriptor() ([]byte, []int) {
+	return file_currency_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *HistoryRateItem) GetDate() string {
+	if x != nil {
+		return x.Date
+	}
+	return ""
+}
+
+func (x *HistoryRateItem) GetRate() float64 {
+	if x != nil {
+		return x.Rate
+	}
+	return 0
 }
 
 var File_currency_service_proto protoreflect.FileDescriptor
@@ -197,15 +337,20 @@ const file_currency_service_proto_rawDesc = "" +
 	"\x15GetCurrentRateRequest\"@\n" +
 	"\x16GetCurrentRateResponse\x12\x12\n" +
 	"\x04date\x18\x01 \x01(\tR\x04date\x12\x12\n" +
-	"\x04rate\x18\x02 \x01(\x01R\x04rate\"\x17\n" +
-	"\x15GetHistoryRateRequest\"\x9d\x01\n" +
-	"\x16GetHistoryRateResponse\x12G\n" +
-	"\ahistory\x18\x01 \x03(\v2-.currency.GetHistoryRateResponse.HistoryEntryR\ahistory\x1a:\n" +
-	"\fHistoryEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\x01R\x05value:\x028\x012\xbb\x01\n" +
+	"\x04rate\x18\x02 \x01(\x01R\x04rate\"(\n" +
+	"\x12GetRateDateRequest\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\")\n" +
+	"\x13GetRateDateResponse\x12\x12\n" +
+	"\x04rate\x18\x01 \x01(\x01R\x04rate\"\x17\n" +
+	"\x15GetHistoryRateRequest\"M\n" +
+	"\x16GetHistoryRateResponse\x123\n" +
+	"\ahistory\x18\x01 \x03(\v2\x19.currency.HistoryRateItemR\ahistory\"9\n" +
+	"\x0fHistoryRateItem\x12\x12\n" +
+	"\x04date\x18\x01 \x01(\tR\x04date\x12\x12\n" +
+	"\x04rate\x18\x02 \x01(\x01R\x04rate2\x87\x02\n" +
 	"\x0fCurrencyService\x12S\n" +
-	"\x0eGetCurrentRate\x12\x1f.currency.GetCurrentRateRequest\x1a .currency.GetCurrentRateResponse\x12S\n" +
+	"\x0eGetCurrentRate\x12\x1f.currency.GetCurrentRateRequest\x1a .currency.GetCurrentRateResponse\x12J\n" +
+	"\vGetRateDate\x12\x1c.currency.GetRateDateRequest\x1a\x1d.currency.GetRateDateResponse\x12S\n" +
 	"\x0eGetHistoryRate\x12\x1f.currency.GetHistoryRateRequest\x1a .currency.GetHistoryRateResponseB\x06Z\x04./pbb\x06proto3"
 
 var (
@@ -220,22 +365,26 @@ func file_currency_service_proto_rawDescGZIP() []byte {
 	return file_currency_service_proto_rawDescData
 }
 
-var file_currency_service_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_currency_service_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_currency_service_proto_goTypes = []any{
 	(*GetCurrentRateRequest)(nil),  // 0: currency.GetCurrentRateRequest
 	(*GetCurrentRateResponse)(nil), // 1: currency.GetCurrentRateResponse
-	(*GetHistoryRateRequest)(nil),  // 2: currency.GetHistoryRateRequest
-	(*GetHistoryRateResponse)(nil), // 3: currency.GetHistoryRateResponse
-	nil,                            // 4: currency.GetHistoryRateResponse.HistoryEntry
+	(*GetRateDateRequest)(nil),     // 2: currency.GetRateDateRequest
+	(*GetRateDateResponse)(nil),    // 3: currency.GetRateDateResponse
+	(*GetHistoryRateRequest)(nil),  // 4: currency.GetHistoryRateRequest
+	(*GetHistoryRateResponse)(nil), // 5: currency.GetHistoryRateResponse
+	(*HistoryRateItem)(nil),        // 6: currency.HistoryRateItem
 }
 var file_currency_service_proto_depIdxs = []int32{
-	4, // 0: currency.GetHistoryRateResponse.history:type_name -> currency.GetHistoryRateResponse.HistoryEntry
+	6, // 0: currency.GetHistoryRateResponse.history:type_name -> currency.HistoryRateItem
 	0, // 1: currency.CurrencyService.GetCurrentRate:input_type -> currency.GetCurrentRateRequest
-	2, // 2: currency.CurrencyService.GetHistoryRate:input_type -> currency.GetHistoryRateRequest
-	1, // 3: currency.CurrencyService.GetCurrentRate:output_type -> currency.GetCurrentRateResponse
-	3, // 4: currency.CurrencyService.GetHistoryRate:output_type -> currency.GetHistoryRateResponse
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
+	2, // 2: currency.CurrencyService.GetRateDate:input_type -> currency.GetRateDateRequest
+	4, // 3: currency.CurrencyService.GetHistoryRate:input_type -> currency.GetHistoryRateRequest
+	1, // 4: currency.CurrencyService.GetCurrentRate:output_type -> currency.GetCurrentRateResponse
+	3, // 5: currency.CurrencyService.GetRateDate:output_type -> currency.GetRateDateResponse
+	5, // 6: currency.CurrencyService.GetHistoryRate:output_type -> currency.GetHistoryRateResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -252,7 +401,7 @@ func file_currency_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_currency_service_proto_rawDesc), len(file_currency_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
