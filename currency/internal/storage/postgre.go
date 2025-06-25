@@ -3,6 +3,8 @@ package storage
 import (
 	"database/sql"
 	"fmt"
+	"math/rand"
+	"time"
 
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -38,7 +40,7 @@ func New(storagePath string, logger *zap.Logger) (*Storage, error) {
 	stmt, err := db.Prepare(`
 	CREATE TABLE IF NOT EXISTS dailyRate (
 	id SERIAL PRIMARY KEY,
-	date VARCHAR(20) NOT NULL,
+	date VARCHAR(20) NOT NULL UNIQUE,
 	value float NOT NULL);
 	`)
 
@@ -115,4 +117,24 @@ func (st *Storage) GetHistory(logger *zap.Logger) (HistoryRate, error) {
 	}
 
 	return history, nil
+}
+
+func (st *Storage) InsertRandomData(startDate time.Time, endDate time.Time, logger *zap.Logger) error {
+	rand.Seed(time.Now().UnixNano())
+
+	// Простой INSERT с ON CONFLICT
+	query := `INSERT INTO dailyrate (date, value) VALUES ($1, $2) ON CONFLICT (date) DO NOTHING`
+
+	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
+		dbDate := date.Format("02.01.2006") // DD.MM.YYYY
+		rate := 85.0 + rand.Float64()*10.0  // Курс 85–95
+
+		_, err := st.db.Exec(query, dbDate, rate)
+		if err != nil {
+			logger.Error("failed to insert", zap.String("date", dbDate), zap.Error(err))
+			return err // Прерываем при ошибке
+		}
+	}
+
+	return nil
 }

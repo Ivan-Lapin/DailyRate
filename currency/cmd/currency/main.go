@@ -20,10 +20,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	configPath = "../../internal/config/config.example.yaml"
-)
-
 func main() {
 
 	logger, err := zap.NewProduction()
@@ -36,14 +32,15 @@ func main() {
 		}
 	}()
 
-	config, err := config.LoadConfig(configPath, logger)
+	config, err := config.LoadConfig(logger)
 	if err != nil {
 		logger.Fatal("failed to load config %w", zap.Error(err))
 	}
 
 	db_postgreSQL, err := storage.New(config.ConnDB, logger)
 	if err != nil {
-		log.Fatal(err) //todo
+		logger.Error("failed to create/connect to DB", zap.Error(err))
+		log.Fatalf("failed to create/connect to DB: %v", err)
 	}
 
 	_ = db_postgreSQL
@@ -85,7 +82,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Info("gRPC server started", zap.String("port", "8082"))
+		logger.Info("gRPC server started", zap.String("port", config.HTTPPort))
 		if err := grpcServer.Serve(lis); err != nil {
 			err = fmt.Errorf("failed to serve: %w", err)
 			logger.Fatal("serve grpc: %v\n", zap.Error(err))
