@@ -36,7 +36,7 @@ func (s *Scheduler) AddCurrencyFetchJob() error {
 			s.logger.Error("get current currency rate", zap.Error(err))
 		}
 	}); err != nil {
-		s.logger.Fatal("Failed to add cron job", zap.Error(err))
+		s.logger.Fatal("fatal to add cron job", zap.Error(err))
 	}
 
 	return nil

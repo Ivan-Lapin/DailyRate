@@ -1,5 +1,7 @@
 package db
 
+//not used
+
 import (
 	"database/sql"
 	"fmt"

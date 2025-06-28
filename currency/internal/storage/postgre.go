@@ -3,8 +3,6 @@ package storage
 import (
 	"database/sql"
 	"fmt"
-	"math/rand"
-	"time"
 
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
@@ -32,9 +30,9 @@ func New(storagePath string, logger *zap.Logger) (*Storage, error) {
 	}
 
 	if err := db.Ping(); err != nil {
-		logger.Error("failed to ping database", zap.Error(err))
+		logger.Error("fatal to ping to database", zap.Error(err))
 		db.Close()
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+		return nil, fmt.Errorf("failed to ping to database: %w", err)
 	}
 
 	stmt, err := db.Prepare(`
@@ -45,7 +43,7 @@ func New(storagePath string, logger *zap.Logger) (*Storage, error) {
 	`)
 
 	if err != nil {
-		return nil, fmt.Errorf("#{op}: #{err}")
+		return nil, fmt.Errorf("failed to prepare request with creating table: %w", err)
 	}
 
 	_, err = stmt.Exec()
@@ -62,6 +60,7 @@ func (st *Storage) SaveRate(date string, rate float64, logger *zap.Logger) error
 	_, err := st.db.Exec(query, date, rate)
 	if err != nil {
 		logger.Error("failed to insert data", zap.Error(err))
+		return fmt.Errorf("failed to insert data: %w", err)
 	}
 	return err
 }
@@ -70,20 +69,20 @@ func (st *Storage) GetRate(date string, logger *zap.Logger) (Rate, bool, error) 
 	query := `SELECT value FROM dailyrate WHERE date = $1 LIMIT 1`
 	rows, err := st.db.Query(query, date)
 	if err != nil {
-		logger.Error("failed to get rate from date", zap.Error(err))
+		logger.Error("failed to do request with getting rate from the date", zap.Error(err))
 	}
 
 	var rate Rate
 	for rows.Next() {
 
 		if err := rows.Scan(&rate); err != nil {
-			logger.Error("failed to read row", zap.Error(err))
-			return 0.0, false, err
+			logger.Error("failed to scan row", zap.Error(err))
+			return 0.0, false, fmt.Errorf("failed to scan row: %w", err)
 		}
 	}
 
 	if err := rows.Err(); err != nil {
-		return 0.0, false, fmt.Errorf("string processing error: %w", err)
+		return 0.0, false, fmt.Errorf("for getting rate after iterating through error: %w", err)
 	}
 
 	if rate == 0.0 {
@@ -98,7 +97,7 @@ func (st *Storage) GetHistory(logger *zap.Logger) (HistoryRate, error) {
 	rows, err := st.db.Query(query)
 	if err != nil {
 		logger.Error("failed to get history rate", zap.Error(err))
-		return nil, err
+		return nil, fmt.Errorf("failed to get history rate: %w", err)
 	}
 	defer rows.Close()
 
@@ -106,35 +105,15 @@ func (st *Storage) GetHistory(logger *zap.Logger) (HistoryRate, error) {
 	for rows.Next() {
 		var item HistoryRateItem
 		if err := rows.Scan(&item.Date, &item.Value); err != nil {
-			logger.Error("failed to read row", zap.Error(err))
-			return nil, err
+			logger.Error("failed to scan row", zap.Error(err))
+			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 		history = append(history, item)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("failed parsing rows: %w", err)
+		return nil, fmt.Errorf("for getting hostory after iterating through error: %w", err)
 	}
 
 	return history, nil
-}
-
-func (st *Storage) InsertRandomData(startDate time.Time, endDate time.Time, logger *zap.Logger) error {
-	rand.Seed(time.Now().UnixNano())
-
-	// Простой INSERT с ON CONFLICT
-	query := `INSERT INTO dailyrate (date, value) VALUES ($1, $2) ON CONFLICT (date) DO NOTHING`
-
-	for date := startDate; !date.After(endDate); date = date.AddDate(0, 0, 1) {
-		dbDate := date.Format("02.01.2006") // DD.MM.YYYY
-		rate := 85.0 + rand.Float64()*10.0  // Курс 85–95
-
-		_, err := st.db.Exec(query, dbDate, rate)
-		if err != nil {
-			logger.Error("failed to insert", zap.String("date", dbDate), zap.Error(err))
-			return err // Прерываем при ошибке
-		}
-	}
-
-	return nil
 }

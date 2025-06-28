@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -14,14 +13,13 @@ func LoadConfig(logger *zap.Logger) (*ConfigParam, error) {
 	exePath, err := os.Executable()
 	if err != nil {
 		err := fmt.Errorf("cannot get executable path: %w", err)
-		log.Fatal(err)
+		logger.Fatal("fatal in Executable", zap.Error(err))
 	}
 	configPath := filepath.Join(filepath.Dir(exePath), "configs", "config.example.yaml")
-	fmt.Println(configPath)
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
-		err = fmt.Errorf("failed to set config file: %w", err)
-		log.Fatal(err)
+		err = fmt.Errorf("failed to load the configuration file from disk: %w", err)
+		logger.Fatal("fatal in Read In Config", zap.Error(err))
 	}
 
 	config := &ConfigParam{

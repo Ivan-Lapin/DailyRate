@@ -62,15 +62,15 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 
 	resp, err = cs.NewRetryGet(b, logger, config, resp)
 	if err != nil {
-		logger.Error("Failed to fetch currency data", zap.Error(err))
-		return Currency{}, err
+		logger.Error("failed to fetch currency data", zap.Error(err))
+		return Currency{}, fmt.Errorf("failed to fetch currency data: %w", err)
 	}
 
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Error("read response from API", zap.Error(err))
+		logger.Error("failed to read response from API", zap.Error(err))
 		return Currency{}, fmt.Errorf("failed to read response from API: %w", err)
 	}
 
@@ -85,9 +85,8 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 
 	err = json.Unmarshal(body, &apiResponse)
 	if err != nil {
-		err = fmt.Errorf("failed to Unmarshal JSON data: %w", err)
-		logger.Error("Unmarshal JSON", zap.Error(err))
-		return Currency{}, err
+		logger.Error("failed to Unmarshal JSON", zap.Error(err))
+		return Currency{}, fmt.Errorf("failed to Unmarshal JSON data: %w", err)
 	}
 
 	// Парсим дату из API
