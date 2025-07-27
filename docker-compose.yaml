@@ -4,6 +4,6 @@ services:
   currency_service:
     build: .
     ports:
-      - "9090:9090"
+      - "8888:8888"
     environment:
       - CONFIG_PATH=./configs/config.example.yaml

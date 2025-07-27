@@ -18,6 +18,6 @@ COPY --from=builder /app/currency_service .
 
 COPY ./currency/internal/config/config.example.yaml ./configs/config.example.yaml
 
-EXPOSE 9090
+EXPOSE 8888
 
 ENTRYPOINT [ "./currency_service" ]
