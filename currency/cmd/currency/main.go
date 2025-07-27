@@ -9,6 +9,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	_ "net/http/pprof"
+
 	"github.com/Ivan-Lapin/DailyRate/currency/cmd/cron"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/config"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/handler"
@@ -17,28 +19,30 @@ import (
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+
+	// сгенерированные доки, важно: путь по модулю
+	httpSwagger "github.com/swaggo/http-swagger" // подключаем swagger UI
 )
+
+//go:generate swag init --output docs
 
 func main() {
 
-	logger, err := zap.NewProduction()
+	cfg := zap.NewDevelopmentConfig()
+	cfg.EncoderConfig.TimeKey = "" // убрать timestamp
+	logger, err := cfg.Build()
 	if err != nil {
-		log.Fatalf("failed to create zap logger: %v", err)
+		log.Fatal("failed to build constructs a logger from the config and options", zap.Error(err))
 	}
-	defer func() {
-		if err := logger.Sync(); err != nil {
-			log.Printf("Failed to sync logger: %v", err)
-		}
-	}()
 
 	config, err := config.LoadConfig(logger)
 	if err != nil {
-		logger.Fatal("failed to load config %w", zap.Error(err))
+		log.Fatal("failed to load config %w", zap.Error(err))
 	}
 
 	db_postgreSQL, err := storage.New(config.ConnDB, logger)
 	if err != nil {
-		logger.Fatal("failed to create/connect to DB: %v\n", zap.Error(err))
+		logger.Fatal("failed to create/connect to DB: ", zap.Error(err))
 	}
 
 	// repo := repository.NewInMemory()
@@ -76,7 +80,7 @@ func main() {
 	}
 
 	go func() {
-		logger.Info("gRPC server started", zap.String("port", config.HTTPPort))
+		logger.Info("gRPC server started", zap.String("port", config.GRPCPort))
 		if err := grpcServer.Serve(lis); err != nil {
 			logger.Fatal("failed to serve grpc: %v\n", zap.Error(err))
 		}
@@ -87,6 +91,11 @@ func main() {
 	}
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		// @Summary Проверка здоровья сервиса
+		// @Description Возвращает 200 OK, если сервис работает
+		// @Tags health
+		// @Success 200 {string} string "OK"
+		// @Router /healthz [get]
 		w.WriteHeader(http.StatusOK)
 		_, err = w.Write([]byte("OK"))
 		if err != nil {
@@ -94,8 +103,10 @@ func main() {
 
 		}
 	})
+	http.Handle("/swagger/", httpSwagger.WrapHandler)
 
 	go func() {
+		logger.Info("http server started", zap.String("port", config.HTTPPort))
 		if err := httpServer.ListenAndServe(); err != nil {
 			logger.Fatal("listen and serve http: %v\n", zap.Error(err))
 		}

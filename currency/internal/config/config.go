@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -10,16 +11,17 @@ import (
 )
 
 func LoadConfig(logger *zap.Logger) (*ConfigParam, error) {
-	exePath, err := os.Executable()
-	if err != nil {
-		err := fmt.Errorf("cannot get executable path: %w", err)
-		logger.Fatal("fatal in Executable", zap.Error(err))
+	configPath := os.Getenv("CONFIG_PATH")
+	if configPath == "" {
+		configPath = filepath.Join("config.example.yaml")
+		logger.Info("CONFIG_PATH not set, using default path", zap.String("path", configPath))
+	} else {
+		logger.Info("Using config from ENV", zap.String("path", configPath))
 	}
-	configPath := filepath.Join(filepath.Dir(exePath), "configs", "config.example.yaml")
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
 		err = fmt.Errorf("failed to load the configuration file from disk: %w", err)
-		logger.Fatal("fatal in Read In Config", zap.Error(err))
+		log.Fatal("fatal in Read In Config\n", zap.Error(err))
 	}
 
 	config := &ConfigParam{
@@ -30,7 +32,7 @@ func LoadConfig(logger *zap.Logger) (*ConfigParam, error) {
 		NameDB:      viper.GetString("nameDB"),
 	}
 
-	logger.Info("Configuration loaded", zap.Any("config", config))
+	log.Println("Configuration loaded", zap.Any("config", config))
 
 	return config, nil
 }
