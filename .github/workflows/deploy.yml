@@ -11,17 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
+    - name: SSH Deploy
       uses: actions/checkout@v3
 
-    - name: Deploy via SSH
-      uses: appleboy/ssh-action@v0.1.6
-      with:
-        host: ${{ secrets.SERVER_IP }}
-        username: root
-        key: ${{ secrets.SERVER_SSH_KEY }}
-        script: |
-          cd /root/app
-          git pull origin main
-          docker compose down
-          docker compose up -d --build
+    - name: SSH Deploy
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /app/ExchangeDaily
+            git pull origin main
+            docker build -t currency_service .
+            docker stop currency_service || true
+            docker rm currency_service || true
+            docker run -d --name currency_service -p 9090:9090 currency_service
