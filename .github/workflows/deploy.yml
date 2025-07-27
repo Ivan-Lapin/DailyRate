@@ -21,7 +21,7 @@ jobs:
           username: root
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /app/ExchangeDaily
+            cd /root/app/ExchangeDaily
             git pull origin main
             docker compose down
             docker compose up -d --build
