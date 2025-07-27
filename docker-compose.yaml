@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  currency_service:
+    build: .
+    ports:
+      - "9090:9090"
+    environment:
+      - CONFIG_PATH=./configs/config.example.yaml
