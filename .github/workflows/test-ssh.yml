@@ -1,0 +1,19 @@
+name: Test SSH connection
+
+on:
+  workflow_dispatch:  # Запуск вручную из GitHub UI
+
+jobs:
+  test-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test SSH connection to server
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            echo "SSH connection successful!"
+            hostname
