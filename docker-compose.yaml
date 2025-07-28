@@ -6,4 +6,4 @@ services:
     ports:
       - "8888:8888"
     environment:
-      - CONFIG_PATH=./configs/config.example.yaml
+      - CONFIG_PATH=./currency/internal/config/config.example.yaml

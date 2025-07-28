@@ -16,7 +16,7 @@ WORKDIR /app
 
 COPY --from=builder /app/currency_service .
 
-COPY ./currency/internal/config/config.example.yaml ./configs/config.example.yaml
+COPY ./currency/internal/config/config.example.yaml ./currency/internal/config/config.example.yaml
 
 EXPOSE 8888
 
