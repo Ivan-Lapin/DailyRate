@@ -112,7 +112,7 @@ func (cs currencyService) Fetch(ctx context.Context, config *config.ConfigParam,
 	// cs.repo.Save(rate.Date, rate.Val["RUB"])
 	if err := cs.storage.SaveRate(formattedDate, rateVal, logger); err != nil {
 		logger.Error("failed to save rate", zap.String("date", formattedDate), zap.Float64("rate", rateVal), zap.Error(err))
-		return currency, fmt.Errorf("failed to save rate: %w", err)
+		return currency, nil
 	}
 
 	return currency, nil
