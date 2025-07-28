@@ -1,4 +1,4 @@
 currency_api_url: 	https://v6.exchangerate-api.com/v6/1d40c79e54dd9bde719c2bb0/latest/USD
-grpc_port: ":8088"
-http_port: ":8089"
+grpc_port: ":8888"
+http_port: ":8889"
 connectDB: "host=147.45.165.193 port=5432 user=currency_p1n41k password=qwerty1 dbname=currency_db sslmode=disable"
