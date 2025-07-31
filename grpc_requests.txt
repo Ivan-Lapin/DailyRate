@@ -1,0 +1,21 @@
+ghz \
+  --proto proto/currency/currency_service.proto \
+  --call currency.CurrencyService/GetCurrentRate \
+  -c 50 -n 1000 \
+  --insecure \
+  localhost:8888
+
+ghz \
+  --proto proto/currency/currency_service.proto \
+  --call currency.CurrencyService/GetRateDate \
+  -d '{"date": "28.07.2025"}' \
+  -c 50 -n 1000 \
+  --insecure \
+  localhost:8888
+
+ghz \
+  --proto proto/currency/currency_service.proto \
+  --call currency.CurrencyService/GetHistoryRate \
+  -c 50 -n 1000 \
+  --insecure \
+  localhost:8888

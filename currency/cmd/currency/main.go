@@ -17,6 +17,8 @@ import (
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/service"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/storage"
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -68,10 +70,16 @@ func main() {
 		logger.Error("failed to get start currency rate: %v/n", zap.Error(err))
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+	)
+
 	pb.RegisterCurrencyServiceServer(grpcServer, &handler.Server{
 		App: app,
 	})
+
+	grpc_prometheus.Register(grpcServer)
 
 	lis, err := net.Listen("tcp", config.GRPCPort)
 	if err != nil {
@@ -89,6 +97,8 @@ func main() {
 	httpServer := &http.Server{
 		Addr: config.HTTPPort,
 	}
+
+	http.Handle("/metrics", promhttp.Handler())
 
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		// @Summary Проверка здоровья сервиса

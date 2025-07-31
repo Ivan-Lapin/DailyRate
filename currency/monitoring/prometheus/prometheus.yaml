@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s  # как часто забирать метрики
+
+scrape_configs:
+  - job_name: 'grpc_server'
+    static_configs:
+      - targets: ['currency_service:8889']  # порт, где /metrics
