@@ -17,6 +17,7 @@ import (
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/service"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/storage"
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -41,6 +42,8 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to load config %w", zap.Error(err))
 	}
+
+	logger.Info("DSN", zap.String("DSN", config.ConnDB))
 
 	db_postgreSQL, err := storage.New(config.ConnDB, logger)
 	if err != nil {
@@ -71,8 +74,13 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
-		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			handler.JWTAuthInterceptor(config.JWTToken, logger),
+			grpc_prometheus.UnaryServerInterceptor,
+		)),
+		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
+			grpc_prometheus.StreamServerInterceptor,
+		)),
 	)
 
 	pb.RegisterCurrencyServiceServer(grpcServer, &handler.Server{

@@ -11,7 +11,7 @@ import (
 )
 
 func LoadConfig(logger *zap.Logger) (*ConfigParam, error) {
-	configPath := os.Getenv("CONFIG_PATH")
+	configPath := os.Getenv("CONFIG_PATH_CURRENCY")
 	if configPath == "" {
 		configPath = filepath.Join("config.example.yaml")
 		logger.Info("CONFIG_PATH not set, using default path", zap.String("path", configPath))
@@ -30,6 +30,7 @@ func LoadConfig(logger *zap.Logger) (*ConfigParam, error) {
 		HTTPPort:    viper.GetString("http_port"),
 		ConnDB:      viper.GetString("connectDB"),
 		NameDB:      viper.GetString("nameDB"),
+		JWTToken:    viper.GetString("jwt_token"),
 	}
 
 	log.Println("Configuration loaded", zap.Any("config", config))
@@ -43,4 +44,5 @@ type ConfigParam struct {
 	HTTPPort    string
 	ConnDB      string
 	NameDB      string
+	JWTToken    string
 }

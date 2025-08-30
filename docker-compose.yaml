@@ -2,9 +2,14 @@ version: '3.8'
 
 services:
   currency_service:
-    build: .
+    image: currency_service-image
+    container_name: currency_service
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "8888:8888"
       - "8889:8889"
     environment:
-      - CONFIG_PATH=./currency/internal/config/config.example.yaml
+      - CONFIG_PATH_CURRENCY=./currency/internal/config/config.example.yaml
+    command: ["./currency_service", "arg"]
