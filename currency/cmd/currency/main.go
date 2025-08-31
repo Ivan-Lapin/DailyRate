@@ -17,6 +17,7 @@ import (
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/service"
 	"github.com/Ivan-Lapin/DailyRate/currency/internal/storage"
 	"github.com/Ivan-Lapin/DailyRate/proto/currency/pb"
+	"github.com/gorilla/handlers"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -102,13 +103,10 @@ func main() {
 		}
 	}()
 
-	httpServer := &http.Server{
-		Addr: config.HTTPPort,
-	}
+	mux := http.NewServeMux()
 
-	http.Handle("/metrics", promhttp.Handler())
-
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/metrics", promhttp.Handler())
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		// @Summary Проверка здоровья сервиса
 		// @Description Возвращает 200 OK, если сервис работает
 		// @Tags health
@@ -121,11 +119,23 @@ func main() {
 
 		}
 	})
-	http.Handle("/swagger/", httpSwagger.WrapHandler)
+	mux.Handle("/swagger/", httpSwagger.WrapHandler)
+
+	corsHandler := handlers.CORS(
+		handlers.AllowedOrigins([]string{"http://localhost:3000", "http://localhost:3001"}),
+		handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"}),
+		handlers.AllowedHeaders([]string{"Authorization", "Content-Type"}),
+		handlers.AllowCredentials(),
+	)(mux)
+
+	httpServer := &http.Server{
+		Addr:    config.HTTPPort,
+		Handler: corsHandler,
+	}
 
 	go func() {
 		logger.Info("http server started", zap.String("port", config.HTTPPort))
-		if err := httpServer.ListenAndServe(); err != nil {
+		if err := httpServer.ListenAndServe(); err != nil || err == http.ErrServerClosed {
 			logger.Fatal("listen and serve http: %v\n", zap.Error(err))
 		}
 	}()

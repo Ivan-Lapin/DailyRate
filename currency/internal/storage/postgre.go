@@ -163,7 +163,7 @@ func (st *Storage) GetHistory(logger *zap.Logger) (HistoryRate, error) {
 	var history HistoryRate
 
 	err := st.execWithMetric("Get History", func() error {
-		query := `SELECT * FROM dailyrate ORDER BY TO_DATE('DD.MM.YYYY', date) ASC;`
+		query := `SELECT date, value FROM dailyrate ORDER BY TO_DATE('DD.MM.YYYY', date) ASC;`
 		rows, err := st.db.Query(query)
 		if err != nil {
 			logger.Error("failed to get history rate", zap.Error(err))
