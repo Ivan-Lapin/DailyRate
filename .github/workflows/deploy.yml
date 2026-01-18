@@ -16,12 +16,18 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /root/app/ExchangeDaily
-            git pull origin ${{ github.ref_name }}
-
-            docker compose down --remove-orphans --volumes --rmi local
+            
+            # Чистка
+            docker compose down --volumes --rmi local
             pkill -9 -u postgres -f mysql || true
             rm -rf /tmp/mysql*
             
-            docker compose up -d --build --remove-orphans
+            git pull origin ${{ github.ref_name }}
+            docker compose up -d --build --force-recreate
             docker system prune -f
+            
+            # Ожидание готовности
+            sleep 15
+            docker logs currency_service --tail 10
+
           
